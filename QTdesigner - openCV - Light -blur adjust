@@ -20,16 +20,19 @@ import numpy as np
 import cv2
 import pyshine as ps
 import serial
+from serial_control import light_control
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(498, 522)
+        MainWindow.resize(498*2, 560)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
+
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.label = QtWidgets.QLabel(self.centralwidget)
@@ -37,35 +40,65 @@ class Ui_MainWindow(object):
         self.label.setPixmap(QtGui.QPixmap("images/H.png"))
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
+
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
+
         self.verticalSlider = QtWidgets.QSlider(self.centralwidget)
         self.verticalSlider.setOrientation(QtCore.Qt.Vertical)
         self.verticalSlider.setObjectName("verticalSlider")
         self.gridLayout.addWidget(self.verticalSlider, 0, 0, 1, 1)
+
         self.verticalSlider_2 = QtWidgets.QSlider(self.centralwidget)
         self.verticalSlider_2.setOrientation(QtCore.Qt.Vertical)
         self.verticalSlider_2.setObjectName("verticalSlider_2")
         self.gridLayout.addWidget(self.verticalSlider_2, 0, 1, 1, 1)
+
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_2.setObjectName("label_2")
         self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
+
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setAlignment(QtCore.Qt.AlignCenter)
         self.label_3.setObjectName("label_3")
         self.gridLayout.addWidget(self.label_3, 1, 1, 1, 1)
+
         self.horizontalLayout.addLayout(self.gridLayout)
         self.gridLayout_2.addLayout(self.horizontalLayout, 0, 0, 1, 2)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+
+        """
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setObjectName("pushButton")
         self.horizontalLayout_2.addWidget(self.pushButton)
+
         self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_2.setObjectName("pushButton_2")
         self.horizontalLayout_2.addWidget(self.pushButton_2)
         self.gridLayout_2.addLayout(self.horizontalLayout_2, 1, 0, 1, 1)
+
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.centralwidget)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        """
+        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton.setGeometry(QtCore.QRect(30, 510, 75, 23))
+        self.pushButton.setObjectName("Take picture")
+
+        self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_2.setGeometry(QtCore.QRect(120, 510, 75, 23))
+        self.pushButton_2.setObjectName("Start")
+
+        self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_3.setGeometry(QtCore.QRect(210, 510, 75, 23))
+        self.pushButton_3.setObjectName("Turn on")
+
+        self.pushButton_4 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_4.setGeometry(QtCore.QRect(300, 510, 75, 23))
+        self.pushButton_4.setObjectName("Turn off")
+
         spacerItem = QtWidgets.QSpacerItem(313, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_2.addItem(spacerItem, 1, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -76,6 +109,8 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.verticalSlider.valueChanged['int'].connect(self.brightness_value)
         self.verticalSlider_2.valueChanged['int'].connect(self.blur_value)
+        self.pushButton_4.clicked.connect(self.end_event)
+        self.pushButton_3.clicked.connect(self.end_event2)
         self.pushButton_2.clicked.connect(self.loadImage)
         self.pushButton.clicked.connect(self.savePhoto)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -89,6 +124,20 @@ class Ui_MainWindow(object):
         self.fps = 0
         self.started = False
 
+    def end_event(self):
+        print("test")
+        s = light_control("COM8", 38400, 1)
+        s.open()
+        s.enable()
+        s.close()
+
+    def end_event2(self):
+        print("test2")
+        s = light_control("COM8", 38400, 1)
+        s.open()
+        s.disable()
+        s.close()
+
     def loadImage(self):
         """ This function will load the camera device, obtain the image
             and set it to label using the setPhoto function
@@ -96,19 +145,12 @@ class Ui_MainWindow(object):
         if self.started:
             self.started = False
             self.pushButton_2.setText('Start')
-            print("B")
         else:
             self.started = True
             self.pushButton_2.setText('Stop')
 
 
-
-        cam = True  # True for webcam
-        if cam:
-            vid = cv2.VideoCapture(0)
-        else:
-            vid = cv2.VideoCapture('video.mp4')
-
+        vid = cv2.VideoCapture(0)
         cnt = 0
         frames_to_count = 20
         st = 0
@@ -117,21 +159,19 @@ class Ui_MainWindow(object):
         while (vid.isOpened()):
             img, self.image = vid.read()
             self.image = imutils.resize(self.image, height=480)
-            print("C")
 
             if cnt == frames_to_count:
                 try:  # To avoid divide by 0 we put it in try except
                     print(frames_to_count / (time.time() - st), 'FPS')
                     self.fps = round(frames_to_count / (time.time() - st))
-
                     st = time.time()
                     cnt = 0
                 except:
                     pass
 
             cnt += 1
-
             self.update()
+
             key = cv2.waitKey(1) & 0xFF
             if self.started == False:
                 break
@@ -190,6 +230,7 @@ class Ui_MainWindow(object):
         """ This function will update the photo according to the
             current values of blur and brightness and set it to photo label.
         """
+        print("a")
         img = self.changeBrightness(self.image, self.brightness_value_now)
         img = self.changeBlur(img, self.blur_value_now)
 
@@ -217,7 +258,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "PyShine video process"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "MINI AOI"))
+        self.pushButton_4.setText(_translate("MainWindow", "Turn on"))
+        self.pushButton_3.setText(_translate("MainWindow", "Turn off"))
         self.pushButton_2.setText(_translate("MainWindow", "Start"))
         self.label_2.setText(_translate("MainWindow", "Brightness"))
         self.label_3.setText(_translate("MainWindow", "Blur"))
