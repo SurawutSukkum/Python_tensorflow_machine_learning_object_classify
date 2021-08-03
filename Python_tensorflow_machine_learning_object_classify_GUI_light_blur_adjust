@@ -34,13 +34,10 @@ import pyshine as ps
 import serial
 from serial_control import light_control
 
-
-
 sizeTarget = (224, 224)
 np.set_printoptions(suppress=True)
 dataObj = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 model = load_model("D:/Test Object-Classification - GUI/keras_model.h5")  # path model
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -115,17 +112,17 @@ class Ui_MainWindow(object):
         self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_3.setGeometry(QtCore.QRect(210, 510, 75, 23))
         self.pushButton_3.setObjectName("Turn on")
-        #self.pushButton_3.setStyleSheet("background-color: red")
-
+        self.pushButton_3.setStyleSheet("background-color: red")
+        """
         self.pushButton_4 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_4.setGeometry(QtCore.QRect(300, 510, 75, 23))
         self.pushButton_4.setObjectName("Turn off")
         self.pushButton_4.setStyleSheet("background-color: red")
-
+        """
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
         self.progressBar.setObjectName(u"progressBar")
-        self.progressBar.setGeometry(QtCore.QRect(680, 10, 81, 331))
-        self.progressBar.setValue(24)
+        self.progressBar.setGeometry(QtCore.QRect(690, 10, 71, 511))
+        self.progressBar.setValue(0)
         #self.progressBar.setStyleSheet("QProgressBar::chunk ""{""background-color: red;""}")
         self.progressBar.setOrientation(QtCore.Qt.Vertical)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -147,8 +144,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.verticalSlider.valueChanged['int'].connect(self.brightness_value)
         self.verticalSlider_2.valueChanged['int'].connect(self.blur_value)
-        self.pushButton_4.clicked.connect(self.end_event)
-        self.pushButton_3.clicked.connect(self.end_event2)
+        self.pushButton_3.clicked.connect(self.end_event)
         self.pushButton_2.clicked.connect(self.loadImage)
         self.pushButton.clicked.connect(self.savePhoto)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -161,20 +157,27 @@ class Ui_MainWindow(object):
         self.blur_value_now = 0  # Updated blur value
         self.fps = 0
         self.started = False
-
+        self.started1 = False
     def end_event(self):
-        print("test")
-        s = light_control("COM8", 38400, 1)
-        s.open()
-        s.enable()
-        s.close()
 
-    def end_event2(self):
-        print("test2")
-        s = light_control("COM8", 38400, 1)
-        s.open()
-        s.disable()
-        s.close()
+        if self.started1:
+            self.started1 = False
+            print("test")
+            s = light_control("COM8", 38400, 1)
+            s.open()
+            s.enable()
+            s.close()
+            self.pushButton_3.setText('Light')
+            self.pushButton_3.setStyleSheet("background-color: green")
+        else:
+            self.started1 = True
+            print("test2")
+            s = light_control("COM8", 38400, 1)
+            s.open()
+            s.disable()
+            s.close()
+            self.pushButton_3.setText('Dark')
+            self.pushButton_3.setStyleSheet("background-color: red")
 
     def loadImage(self):
         """ This function will load the camera device, obtain the image
@@ -182,26 +185,25 @@ class Ui_MainWindow(object):
         """
         if self.started:
             self.started = False
-            self.pushButton_2.setText('Stop')
+            self.pushButton_2.setText('STOP')
             self.pushButton_2.setStyleSheet("background-color: red")
         else:
             self.started = True
-            self.pushButton_2.setText('stop')
+            self.pushButton_2.setText('START')
             self.pushButton_2.setStyleSheet("background-color: green")
-
 
         vid = cv2.VideoCapture(0)
         cnt = 0
         frames_to_count = 20
         st = 0
         fps = 0
-
+        cnt_step = 0
+        self.progressBar.setValue(0)
+        self.step = 0
         while (vid.isOpened()):
-
-
             img, self.image = vid.read()
             cv2.imshow("RAW", self.image)
-            print("[INFO] w: {}, h: {}".format(self.image.shape[1], self.image.shape[0]))
+            #print("[INFO] w: {}, h: {}".format(self.image.shape[1], self.image.shape[0]))
 
             self.image = imutils.resize(self.image, height=480)
 
@@ -215,10 +217,30 @@ class Ui_MainWindow(object):
                     pass
 
             cnt += 1
-            self.update()
+            cnt_step +=1
+
+            self.setting=95
+            self.modelResult, self.predictionResult = self.update(self.setting, self.step)
+            if cnt_step > 20 and self.step == 0 and self.modelResult == 20:
+             self.progressBar.setValue(25)
+             self.step = 1
+            elif cnt_step > 40 and self.step == 1 and self.modelResult == 20:
+             self.progressBar.setValue(50)
+             self.step = 2
+            elif cnt_step > 60 and self.step == 2 and self.modelResult == 20:
+             self.progressBar.setValue(75)
+             self.step = 3
+            elif cnt_step > 80 and self.step == 3 and self.modelResult == 20:
+             self.progressBar.setValue(100)
+             self.step = 4
+            elif cnt_step > 100 and self.step == 4 and self.modelResult == 20:
+             cnt_step = 0
+             self.progressBar.setValue(0)
+             self.step = 0
 
             key = cv2.waitKey(1) & 0xFF
             if self.started == False:
+
                 break
                 print('Loop break')
 
@@ -240,14 +262,14 @@ class Ui_MainWindow(object):
         """
         self.brightness_value_now = value
         #print('Brightness: ', value)
-        self.update()
+        self.update(self.setting,self.step)
 
     def blur_value(self, value):
         """ This function will take value from the slider
             for the blur from 0 to 99 """
         self.blur_value_now = value
         #print('Blur: ', value)
-        self.update()
+        self.update(self.setting,self.step)
 
     def changeBrightness(self, img, value):
         """ This function will take an image (img) and the brightness
@@ -272,13 +294,12 @@ class Ui_MainWindow(object):
         img = cv2.blur(img, kernel_size)
         return img
 
-    def update(self):
+    def update(self,setting,step):
         """ This function will update the photo according to the
             current values of blur and brightness and set it to photo label.
         """
         img = self.changeBrightness(self.image, self.brightness_value_now)
         img = self.changeBlur(img, self.blur_value_now)
-        step = 1
         if img is not None:
             img_resize = cv2.resize(img, sizeTarget)  # resize image
             image_array = np.asarray(img_resize)  # convert image to array
@@ -289,11 +310,13 @@ class Ui_MainWindow(object):
             idx = prediction.index(max(prediction))  # get index is maximun value
             dd = str(round(prediction[idx] * 100, 2)) + "%\r\n"
             #ser2.write(dd.encode('utf-8'))
+            self.x = prediction[idx] * 100
+            if self.x > 95:
+                text4 = "STEP" + str(self.step) + " OK"
+                self.textColor4 = (20, 210, 4)
+                self.ret = "OK"
+                self.progressBar.setStyleSheet("QProgressBar::chunk ""{""background-color: green;""}")
 
-            setting = 95
-            if prediction[idx] * 100 > setting:
-                text4 = "STEP1 OK"
-                textColor4=(20, 210, 4)
                 if idx == 0:
                     text1 = "MT2: "  + str(round(prediction[idx] * 100, 2)) + " % "
                 elif idx == 1:
@@ -307,7 +330,7 @@ class Ui_MainWindow(object):
                 elif idx == 5:
                     text1 = "P4: " + str(round(prediction[idx] * 100, 2)) + " % "
                 elif idx == 6:
-                    text1="R128: " + str(round(prediction[idx] * 100, 2)) + " % "
+                    text1 ="R128: " + str(round(prediction[idx] * 100, 2)) + " % "
                 elif idx == 7:
                     text1 = "J2: " + str(round(prediction[idx] * 100, 2)) + " % "
                 elif idx == 8:
@@ -340,13 +363,16 @@ class Ui_MainWindow(object):
                     text1 = "Q23: " + str(round(prediction[idx] * 100, 2)) + " % "
             else:
                 text1 = ": " + str(round(prediction[idx] * 100, 2)) + "%"
-                text4 = "STEP"+str(step)+" NG"
-                textColor4=(210, 20, 0)
+                text4 = "STEP" + str(self.step) + " NG"
+                self.ret = "NG"
+                self.textColor4 = (210, 20, 0)
+                self.progressBar.setStyleSheet("QProgressBar::chunk ""{""background-color: red;""}")
 
         # Here we add display text to the image
         text = 'FPS: ' + str(self.fps)
         img = ps.putBText(img, text, text_offset_x=20, text_offset_y=30, vspace=20, hspace=10, font_scale=1.0,
                           background_RGB=(10, 20, 222), text_RGB=(255, 255, 255))
+        #
         img = ps.putBText(img, text1, text_offset_x=self.image.shape[1] - 240, text_offset_y=30, vspace=20,
                           hspace=10, font_scale=1.0, background_RGB=(228, 20, 222), text_RGB=(255, 255, 255))
         text = f"Brightness: {self.brightness_value_now}"
@@ -357,9 +383,9 @@ class Ui_MainWindow(object):
                           font_scale=1.0, background_RGB=(210, 255, 4), text_RGB=(255, 255, 255))
         #Step
         img = ps.putBText(img, text4, text_offset_x=self.image.shape[1] -500 , text_offset_y=200, vspace=20, hspace=10,
-                          font_scale=3.0, background_RGB=textColor4, text_RGB=(255, 255, 255))
-
+                          font_scale=3.0, background_RGB=self.textColor4, text_RGB=(255, 255, 255))
         self.setPhoto(img)
+        return idx,self.x
 
     def savePhoto(self):
         """ This function will save the image"""
@@ -370,8 +396,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MINI AOI"))
-        self.pushButton_4.setText(_translate("MainWindow", "Turn on"))
-        self.pushButton_3.setText(_translate("MainWindow", "Turn off"))
+        #self.pushButton_4.setText(_translate("MainWindow", "Turn on"))
+        self.pushButton_3.setText(_translate("MainWindow", "Dark"))
         self.pushButton_2.setText(_translate("MainWindow", "Start"))
         self.label_2.setText(_translate("MainWindow", "Brightness"))
         self.label_3.setText(_translate("MainWindow", "Blur"))
