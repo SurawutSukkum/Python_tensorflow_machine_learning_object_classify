@@ -14,8 +14,6 @@ import numpy as np
 import time
 import serial
 from datetime import datetime
-
-from serial_control import light_control as lc
 import os
 import argparse
 
@@ -32,7 +30,6 @@ import time
 import numpy as np
 import pyshine as ps
 import serial
-from serial_control import light_control
 
 sizeTarget = (224, 224)
 np.set_printoptions(suppress=True)
@@ -409,6 +406,45 @@ class Ui_MainWindow(object):
 # Subscribe to PyShine Youtube channel for more detail!
 
 # WEBSITE: www.pyshine.com
+
+class light_control(object):
+    def __init__(self, comport, baudrate, timeout):
+        self.comport = comport
+        self.baudrate = baudrate
+        self.timeout = timeout
+        self.s = serial.Serial(comport, baudrate, timeout=timeout)
+
+    def enable(self):
+        if self.s.is_open:
+            self.s.write("@00F23800E3\r\n".encode())
+            i = self.s.readlines()
+            print("Message from LED LIGHT CONTROLLER: ")
+            print(i)
+            if i == "":
+                i = self.s.readlines()
+            else:
+                self.s.write("@00L11D\r\n".encode())
+                _ = self.s.readlines()
+
+    def disable(self):
+        if self.s.is_open:
+            self.s.write("@00F00000D6\r\n".encode())
+            i = self.s.readlines()
+            print("Message from LED LIGHT CONTROLLER: ")
+            print(i)
+            if i == "":
+                i = self.s.readlines()
+            else:
+                self.s.write("@00L11D\r\n".encode())
+                _ = self.s.readlines()
+            # print(_)
+
+    def open(self):
+        if not self.s.is_open:
+            self.s.open()
+
+    def close(self):
+            self.s.close()
 
 
 if __name__ == "__main__":
