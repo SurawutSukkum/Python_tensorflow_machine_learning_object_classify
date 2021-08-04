@@ -203,7 +203,7 @@ class Ui_MainWindow(object):
         while (vid.isOpened()):
             img, self.image = vid.read()
             cv2.imshow("RAW", self.image)
-            #print("[INFO] w: {}, h: {}".format(self.image.shape[1], self.image.shape[0]))
+            print("[INFO] w: {}, h: {}".format(self.image.shape[1], self.image.shape[0]))
 
             self.image = imutils.resize(self.image, height=480)
 
@@ -217,10 +217,12 @@ class Ui_MainWindow(object):
                     pass
 
             cnt += 1
-            cnt_step +=1
 
             self.setting=95
             self.modelResult, self.predictionResult = self.update(self.setting, self.step)
+            if self.predictionResult > self.setting:
+               cnt_step +=1
+
             if cnt_step > 20 and self.step == 0 and self.modelResult == 20:
              self.progressBar.setValue(25)
              self.step = 1
