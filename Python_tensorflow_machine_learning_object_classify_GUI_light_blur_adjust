@@ -9,9 +9,6 @@
 # Subscribe to PyShine Youtube channel for more detail!
 #Trainning dataset every picture as the same as position
 from tensorflow.keras.models import load_model
-import cv2
-import numpy as np
-import time
 import serial
 from datetime import datetime
 import os
