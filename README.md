@@ -1,2 +1,10 @@
 # Python_tensorflow_machine_learning_object_classify
-![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/GOOGLE%20MACHINE%20DEEP%20LEARNING%201.pdf?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/1.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/2.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/3.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/4.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/5.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/6.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/7.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/8.JPG?raw=true)
+![alt text](https://github.com/SurawutSukkum/Python_tensorflow_machine_learning_object_classify/blob/main/doc/9.JPG?raw=true)
